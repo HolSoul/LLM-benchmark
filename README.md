@@ -1,0 +1,188 @@
+# LLM Benchmark: LoRA Fine-tuning + Сравнение русских медицинских моделей
+
+[![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
+[![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white)](https://pytorch.org)
+[![Kaggle](https://img.shields.io/badge/Kaggle-GPU%20T4-20BEFF?style=for-the-badge&logo=kaggle&logoColor=white)](https://kaggle.com)
+[![Hugging Face](https://img.shields.io/badge/🤗%20Hub-LoRA%20Models-FFD21E?style=for-the-badge)](https://huggingface.co/HolSoul)
+
+---
+
+## Часть 1. LoRA Fine-tuning
+
+17 моделей были дообучены на русском медицинском датасете **stomatology-patient** с использованием **Low-Rank Adaptation (LoRA)** и **TRL SFTTrainer**.
+
+### Технологии
+
+| Компонент | Инструмент |
+|-----------|-----------|
+| Fine-tuning | LoRA (PEFT) + TRL SFTTrainer |
+| Quantization | 4-bit NF4 / 8-bit (bitsandbytes) |
+| Платформа | Hugging Face Hub |
+| Chat templates | apply_chat_template (мультиформат) |
+
+### Модели
+
+| # | Модель | Base | Размер |
+|---|--------|------|--------|
+| 1 | Qwen3-0.6B | Qwen/Qwen3-0.6B | 0.6B |
+| 2 | Gemma-3-1B | google/gemma-3-1b-it | 1B |
+| 3 | Llama-3.2-1B | meta-llama/Llama-3.2-1B-Instruct | 1B |
+| 4 | Qwen3-1.7B | Qwen/Qwen3-1.7B | 1.7B |
+| 5 | Llama-3-8B | meta-llama/Meta-Llama-3-8B-Instruct | 8B |
+| 6 | Mistral-7B | mistralai/Mistral-7B-Instruct-v0.3 | 7B |
+| 7 | Qwen3-8B | Qwen/Qwen3-8B | 8B |
+| 8 | DeepSeek-R1-Distill-8B | deepseek-ai/DeepSeek-R1-Distill-Llama-8B | 8B |
+| 9 | YandexGPT-5-Lite-8B | yandex/YandexGPT-5-Lite-8B-instruct | 8B |
+
+Все адаптеры доступны на Hugging Face: [HolSoul/models](https://huggingface.co/HolSoul/models)
+
+---
+
+## Часть 2. Benchmark
+
+Систематическое сравнение 6 моделей (от 0.6B до 8B параметров) на 25 вопросах по 4 категориям.
+
+### Методология
+
+```mermaid
+flowchart TD
+    A[6 LoRA адаптеров с HF Hub] --> B[Загрузка в Kaggle T4]
+    B --> C{Адаптивная квантизация}
+    C -->|bnb ≥ 0.46.1| D[4-bit NF4]
+    C -->|bnb ≥ 0.40.0| E[8-bit]
+    C -->|нет bnb| F[Full precision]
+    
+    D --> G[25 вопросов × 6 моделей]
+    E --> G
+    F --> G
+    
+    G --> H[Замер времени]
+    G --> I[Замер tok/s]
+    G --> J[Замер длины ответа]
+    
+    H --> K[benchmark_results.csv]
+    I --> K
+    J --> K
+    
+    K --> L[Сводка + Анализ]
+```
+
+### Тестовый набор
+
+25 вопросов, разделённых на 4 категории:
+
+| Категория | Описание | Кол-во |
+|-----------|----------|--------|
+| **stomatology** | Профессиональные медицинские вопросы | 10 |
+| **general** | Общие вопросы, письма, рецепты | 5 |
+| **reasoning** | Диагностические кейсы | 5 |
+| **instruction** | Составление планов и протоколов | 5 |
+
+### Результаты
+
+| Модель | Размер | Среднее время | Tok/с | Средняя длина | Ошибки |
+|--------|--------|---------------|-------|---------------|--------|
+| Qwen3-0.6B | 0.6B | 4.9с | 7 | 100 символов | 0 |
+| Gemma-3-1B | 1B | 2.5с | 6 | 53 символа | 0 |
+| Llama-3.2-1B | 1B | 4.5с | 12 | 162 символа | 0 |
+| Qwen3-1.7B | 1.7B | 7.7с | 7 | 150 символов | 0 |
+| DeepSeek-R1-Distill-8B | 8B | 4.7с | 5 | 115 символов | 0 |
+| YandexGPT-5-8B | 8B | 51.5с | 5 | 1308 символов | 0 |
+
+### Графики
+
+```mermaid
+---
+config:
+  theme: base
+---
+xychart-beta
+    title "Tokens per second (выше = лучше)"
+    x-axis ["Qwen3-0.6B", "Gemma-3-1B", "Llama-3.2-1B", "Qwen3-1.7B", "DeepSeek-8B", "YandexGPT-8B"]
+    y-axis "Tok/s" 0 --> 14
+    bar [7, 6, 12, 7, 5, 5]
+```
+
+```mermaid
+---
+config:
+  theme: base
+---
+xychart-beta
+    title "Среднее время ответа (ниже = лучше)"
+    x-axis ["Qwen3-0.6B", "Gemma-3-1B", "Llama-3.2-1B", "Qwen3-1.7B", "DeepSeek-8B", "YandexGPT-8B"]
+    y-axis "Секунды" 0 --> 55
+    bar [4.9, 2.5, 4.5, 7.7, 4.7, 51.5]
+```
+
+### Анализ
+
+#### Победитель по качеству: **YandexGPT-5-8B**
+
+Модель даёт структурированные, детальные ответы с перечислениями, примерами и рекомендациями. Пример:
+
+> *"Основные причины развития кариеса зубов включают: бактериальную инфекцию, неправильную гигиену полости рта, диету, анатомические особенности, снижение слюноотделения, системные заболевания и генетическую предрасположенность."*
+
+Минус: **51.5 секунды на ответ** — в 10 раз медленнее остальных.
+
+#### Победитель по скорости: **Gemma-3-1B**
+
+Самая быстрая модель (2.5с), но ответы слишком короткие и часто не по теме. Похожа на "вежливого помощника", который соглашается, но не помогает.
+
+#### Лучший баланс: **Llama-3.2-1B**
+
+12 tok/s — самая высокая скорость генерации. Адекватные ответы на медицинские вопросы. Лучший выбор для продакшена среди маленьких моделей.
+
+#### DeepSeek-R1-Distill-8B
+
+Использует `<think>` токены для рассуждения. При 4.7с работает неожиданно быстро для 8B (вероятно, из-за коротких ответов). Качество среднее.
+
+#### Qwen3 (0.6B и 1.7B)
+
+Обе модели генерируют `<think>` блоки, но ответы содержат фактические ошибки. 0.6B — самый маленький размер, но качество страдает.
+
+### Выводы
+
+1. **Для production (качество > скорость)**: YandexGPT-5-Lite-8B + оптимизация инференса (vLLM, быстрее)
+2. **Для production (скорость > качество)**: Llama-3.2-1B или Qwen3-1.7B
+3. **8B модели в 8-bit на T4** работают, но медленно — нужен 4-bit или V100/A100
+4. **Gemma-3-1B** показала неудовлетворительное качество после fine-tuning на русском
+
+---
+
+## Быстрый старт
+
+```bash
+# Локально (GPU 16GB+)
+pip install -r requirements.txt
+python benchmark_kaggle.py
+
+# На Kaggle
+# 1. Загрузи benchmark_kaggle.py как Notebook
+# 2. Accelerator → GPU T4 x2
+# 3. Add secret: HF_TOKEN
+# 4. Run All (~30-60 мин)
+```
+
+## Структура
+
+```
+llm-benchmark/
+├── benchmark_kaggle.py     # Скрипт для Kaggle GPU
+├── test_set.jsonl          # 25 тестовых вопросов
+├── benchmark_results.csv   # Результаты бенчмарка
+├── benchmark_summary.md    # Сводная таблица
+├── analysis.ipynb          # Визуализация
+├── plot_charts.py          # Генерация графиков
+├── requirements.txt
+└── README.md
+```
+
+## Ссылки
+
+- **GitHub**: [HolSoul/LLM-benchmark](https://github.com/HolSoul/LLM-benchmark)
+- **Hugging Face модели**: [HolSoul/models](https://huggingface.co/HolSoul/models)
+
+## Лицензия
+
+MIT License
