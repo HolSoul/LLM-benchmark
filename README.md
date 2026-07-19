@@ -105,6 +105,7 @@ flowchart TD
 
 ![Category heatmap](results/chart_heatmap.png)
 *Скорость генерации по категориям вопросов (tok/s)*
+
 ---
 
 ## Быстрый старт
