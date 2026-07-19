@@ -91,29 +91,20 @@ flowchart TD
 
 ### Графики
 
-```mermaid
----
-config:
-  theme: base
----
-xychart-beta
-    title "Tokens per second (выше = лучше)"
-    x-axis ["Qwen3-0.6B", "Gemma-3-1B", "Llama-3.2-1B", "Qwen3-1.7B", "DeepSeek-8B", "YandexGPT-8B"]
-    y-axis "Tok/s" 0 --> 14
-    bar [7, 6, 12, 7, 5, 5]
-```
+![Tokens per second](results/chart_tokens_per_sec.png)
+*Скорость генерации токенов (выше = лучше)*
 
-```mermaid
----
-config:
-  theme: base
----
-xychart-beta
-    title "Среднее время ответа (ниже = лучше)"
-    x-axis ["Qwen3-0.6B", "Gemma-3-1B", "Llama-3.2-1B", "Qwen3-1.7B", "DeepSeek-8B", "YandexGPT-8B"]
-    y-axis "Секунды" 0 --> 55
-    bar [4.9, 2.5, 4.5, 7.7, 4.7, 51.5]
-```
+![Inference time](results/chart_inference_time.png)
+*Среднее время генерации ответа (ниже = лучше)*
+
+![Response length](results/chart_response_length.png)
+*Средняя длина ответа в символах*
+
+![Speed vs Length trade-off](results/chart_tradeoff.png)
+*Trade-off: скорость генерации vs длина ответа*
+
+![Category heatmap](results/chart_heatmap.png)
+*Скорость генерации по категориям вопросов (tok/s)*
 ---
 
 ## Быстрый старт
