@@ -9,7 +9,7 @@
 
 ## Часть 1. LoRA Fine-tuning
 
-17 моделей были дообучены на русском медицинском датасете **stomatology-patient** с использованием **Low-Rank Adaptation (LoRA)** и **TRL SFTTrainer**.
+17 моделей были дообучены на собранном и размеченном вручную русском медицинском датасете [**robot-student**](https://www.kaggle.com/datasets/holsoul/robot-student) с использованием **Low-Rank Adaptation (LoRA)** и **TRL SFTTrainer**.
 
 ### Технологии
 
